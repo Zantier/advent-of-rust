@@ -1,0 +1,7 @@
+[package]
+name = "aor-202425"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
