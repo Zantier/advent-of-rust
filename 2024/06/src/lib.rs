@@ -1,15 +1,15 @@
+use std::cmp::Ordering;
+
 // Write a function that returns the reference to the longer string
 // without any new allocations
 pub fn longer_wish<'a>(s1: &'a str, s2: &'a str) -> Option<&'a str> {
     // Your code here
     let len1 = s1.trim().chars().count();
     let len2 = s2.trim().chars().count();
-    if len1 > len2 {
-        Some(s1)
-    } else if len2 > len1 {
-        Some(s2)
-    } else {
-        None
+    match len1.cmp(&len2) {
+        Ordering::Greater => Some(s1),
+        Ordering::Less => Some(s2),
+        Ordering::Equal => None,
     }
 }
 

@@ -8,7 +8,7 @@ pub fn print_message(message: String) {
 
 fn write_message(message: String, writer: &mut impl Write) -> Result<(), std::io::Error> {
     let message = format!("Message: {message}\n");
-    writer.write(message.as_bytes())?;
+    writer.write_all(message.as_bytes())?;
     Ok(())
 }
 

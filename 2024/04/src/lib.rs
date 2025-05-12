@@ -46,10 +46,6 @@ impl Kid {
 
     // Move yesterday's function to an associated function in the struct
     pub fn is_nice(&self) -> bool {
-        if let Niceness::Nice(_) = self.niceness {
-            true
-        } else {
-            false
-        }
+        matches!(self.niceness, Niceness::Nice(_))
     }
 }
