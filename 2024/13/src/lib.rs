@@ -1,11 +1,50 @@
 // Import the necessary modules
+use std::{error::Error, fmt::Display};
 
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
     // 1. Add variants here (read description)
+    NoName,
+    NoGoodDeeds,
+    NoBadDeeds,
+    InvalidGoodDeeds,
+    InvalidBadDeeds,
+}
+
+trait StrExt: Sized {
+    fn err_if_empty(&self, error: ParseError) -> Result<Self, ParseError>;
+}
+
+impl StrExt for &str {
+    fn err_if_empty(&self, error: ParseError) -> Result<Self, ParseError> {
+        if self.is_empty() {
+            Err(error)
+        } else {
+            Ok(self)
+        }
+    }
+}
+
+impl Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let message = match self {
+            ParseError::NoName => "Name field is missing",
+            ParseError::NoGoodDeeds => "Good deeds field is missing",
+            ParseError::NoBadDeeds => "Bad deeds field is missing",
+            ParseError::InvalidGoodDeeds => "Good deeds value is invalid",
+            ParseError::InvalidBadDeeds => "Bad deeds value is invalid",
+        };
+
+        f.write_str(message)?;
+        Ok(())
+    }
 }
 
 // 2. Implement the Error trait for ParseError
+impl Error for ParseError {
+}
 
+#[derive(Debug, PartialEq)]
 pub struct Kid {
     pub name: String,
     pub niceness: Niceness,
@@ -25,17 +64,23 @@ impl Kid {
     pub fn parse_row(csv_row: &str) -> Result<Kid, ParseError> {
         // 3. Update the code to return meaningful errors
         let mut fields = csv_row.split(',');
-        let name = fields.next().ok_or("No name")?.to_string();
+        let name = fields
+            .next()
+            .ok_or(ParseError::NoName)?
+            .err_if_empty(ParseError::NoName)?
+            .to_string();
         let good_deeds = fields
             .next()
-            .ok_or("No good deeds")?
+            .ok_or(ParseError::NoGoodDeeds)?
+            .err_if_empty(ParseError::NoGoodDeeds)?
             .parse::<u32>()
-            .map_err(|_| "Invalid good deeds")?;
+            .map_err(|_| ParseError::InvalidGoodDeeds)?;
         let bad_deeds = fields
             .next()
-            .ok_or("No bad deeds")?
+            .ok_or(ParseError::NoBadDeeds)?
+            .err_if_empty(ParseError::NoBadDeeds)?
             .parse::<u32>()
-            .map_err(|_| "Invalid bad deeds")?;
+            .map_err(|_| ParseError::InvalidBadDeeds)?;
 
         Ok(Kid::new(name, good_deeds, bad_deeds))
     }
@@ -61,4 +106,20 @@ pub const BAD_WEIGHT: f32 = 2.0;
 pub enum Niceness {
     Nice(u32),
     Naughty,
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{Kid, ParseError};
+
+    #[test]
+    fn test_errors() {
+        assert_eq!(Kid::parse_row(""), Err(ParseError::NoName));
+        assert_eq!(Kid::parse_row("Alice"), Err(ParseError::NoGoodDeeds));
+        assert_eq!(Kid::parse_row("Alice,,1"), Err(ParseError::NoGoodDeeds));
+        assert_eq!(Kid::parse_row("Alice,3"), Err(ParseError::NoBadDeeds));
+        assert_eq!(Kid::parse_row("Alice,3,"), Err(ParseError::NoBadDeeds));
+        assert_eq!(Kid::parse_row("Alice,a,1"), Err(ParseError::InvalidGoodDeeds));
+        assert_eq!(Kid::parse_row("Alice,3,a"), Err(ParseError::InvalidBadDeeds));
+    }
 }
