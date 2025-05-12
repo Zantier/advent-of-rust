@@ -1,4 +1,4 @@
-use std::{error::Error, ops::Deref};
+use std::{cmp::Ordering, error::Error, ops::Deref};
 
 #[derive(Debug, Clone)]
 pub struct Location {
@@ -17,17 +17,58 @@ impl Location {
     // - z: f64
     // - area: f64
     // - snow: Either `SnowKg`, `SnowLb` or `Snowball`
+    pub fn new(x: f64, y: f64, z: f64, area: f64, snow: impl Into<Snowball>) -> Self {
+        Location { x, y, z, area, snow: snow.into() }
+    }
 
     pub fn density(&self) -> f64 {
         // 2. Implement the `density()` method.
         // Calculation: snow / area
         // all area is in one unit, so don't worry about the unit conversion.
         // Return 0.0 if the area is 0.0.
+        if self.area == 0.0 {
+            return 0.0
+        }
+
+        (*self.snow as f64) / self.area
     }
+}
+
+impl Ord for Location {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let density = self.density();
+        let other_density = other.density();
+        if density.is_nan() {
+            return Ordering::Less;
+        }
+        if other_density.is_nan() {
+            return Ordering::Greater;
+        }
+
+        density.partial_cmp(&other_density).unwrap()
+    }
+}
+
+impl PartialOrd for Location {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Location {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == Ordering::Equal
+    }
+}
+
+impl Eq for Location {
 }
 
 pub fn find_best_location(locations: Vec<Location>) -> Result<Location, Box<dyn Error>> {
     // 3. Find the location with the highest snow density.
+    locations.iter().max()
+        .cloned()
+        .ok_or("No maximum".into())
 }
 
 const SNOWBALL_WEIGHT_KG: f64 = 0.2;
