@@ -10,4 +10,20 @@ pub fn is_nice(good_deeds: u32, bad_deeds: u32) -> bool {
     // e.g. 10 good deeds and 2 bad deeds =
     // (10 * 1) / ((10 * 1) + (2 * 2)) = 10 / 14 = 0.714... (not nice)
     // If both good and bad deeds are 0, the child is naughty
+    let good_deeds = good_deeds as f32;
+    let bad_deeds = bad_deeds as f32;
+
+    good_deeds / (good_deeds + 2.0 * bad_deeds) >= 0.75
+}
+
+#[cfg(test)]
+mod test {
+    use crate::is_nice;
+
+    #[test]
+    fn test_is_nice() {
+        assert_eq!(is_nice(10, 2), false);
+        assert_eq!(is_nice(12, 2), true);
+        assert_eq!(is_nice(0, 0), false);
+    }
 }
