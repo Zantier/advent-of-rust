@@ -1,5 +1,5 @@
 // TODO: Update the function argument type
-pub fn print_message(message: String) {
+pub fn print_message(message: &str) {
     println!("Message: {}", message);
 }
 
