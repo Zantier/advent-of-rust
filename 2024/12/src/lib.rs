@@ -1,9 +1,27 @@
 use std::{cmp::Ordering, error::Error, ops::Deref};
 
+#[derive(PartialEq)]
+pub struct OrdFloat(f64);
+
+impl Ord for OrdFloat {
+    fn cmp(&self, OrdFloat(other): &Self) -> Ordering {
+        self.0.partial_cmp(other).unwrap_or(Ordering::Equal)
+    }
+}
+
+impl PartialOrd for OrdFloat {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Eq for OrdFloat {
+}
+
 // 1. Update the function signature to accept and return references to Locations
-pub fn find_most_dense_location(locations: Vec<Location>) -> Result<Location, Box<dyn Error>> {
+pub fn find_most_dense_location(locations: &[Location]) -> Result<&Location, Box<dyn Error>> {
     locations
-        .into_iter()
+        .iter()
         .max_by(|a, b| {
             a.density()
                 .partial_cmp(&b.density())
@@ -15,6 +33,11 @@ pub fn find_most_dense_location(locations: Vec<Location>) -> Result<Location, Bo
 pub fn find_nearest_location(locations: &[Location]) -> Result<&Location, Box<dyn Error>> {
     // 2. Find the nearest location
     // Only consider locations with a density of 1000 or more
+    locations
+        .iter()
+        .filter(|location| location.density() >= 1000.0)
+        .min_by_key(|location| location.distance())
+        .ok_or("No location found".into())
 }
 
 const SNOWBALL_WEIGHT_KG: f64 = 0.2;
@@ -85,7 +108,7 @@ impl From<SnowLb> for Snowball {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Location {
     pub x: f64,
     pub y: f64,
@@ -111,5 +134,38 @@ impl Location {
         } else {
             0.0
         }
+    }
+
+    pub fn distance(&self) -> OrdFloat {
+        OrdFloat(self.x.hypot(self.y))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{find_nearest_location, Location, Snowball};
+
+    #[test]
+    fn test_nearest() {
+        let locations: Vec<Location> = vec![
+            Location::new(10.0, 10.0, 0.0, 1.0, Snowball(1000)),
+            Location::new(10.0, -10.0, 0.0, 1.0, Snowball(1000)),
+            Location::new(-10.0, -10.0, 0.0, 1.0, Snowball(1000)),
+            Location::new(14.0, 0.0, 0.0, 1.0, Snowball(1000)),
+            Location::new(-10.0, 10.0, 0.0, 1.0, Snowball(1000)),
+        ];
+        assert_eq!(find_nearest_location(&locations).ok(), Some(&Location::new(14.0, 0.0, 0.0, 1.0, Snowball(1000)),));
+    }
+
+    #[test]
+    fn test_nearest_density() {
+        let locations: Vec<Location> = vec![
+            Location::new(1.0, 0.0, 0.0, 1.0, Snowball(800)),
+            Location::new(2.0, 0.0, 0.0, 1.0, Snowball(900)),
+            Location::new(3.0, 0.0, 0.0, 1.0, Snowball(1000)),
+            Location::new(4.0, 0.0, 0.0, 1.0, Snowball(1100)),
+            Location::new(5.0, 0.0, 0.0, 1.0, Snowball(1200)),
+        ];
+        assert_eq!(find_nearest_location(&locations).ok(), Some(&Location::new(3.0, 0.0, 0.0, 1.0, Snowball(1000))));
     }
 }
