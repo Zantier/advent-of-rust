@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 const SNOWBALL_WEIGHT_KG: f64 = 0.2;
 const SNOWBALL_WEIGHT_LB: f64 = 0.441;
 
@@ -10,8 +12,31 @@ impl SnowKg {
 }
 
 // 1. Implement the `Deref` trait for `SnowKg`
+impl Deref for SnowKg {
+    type Target = f64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 // 2. Implement the `Deref` trait for `SnowLb`
+impl Deref for SnowLb {
+    type Target = f64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 // 3. Implement the `Deref` trait for `Snowball`
+impl Deref for Snowball {
+    type Target = i64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 pub struct SnowLb(pub f64);
 
