@@ -1,16 +1,36 @@
+use std::fmt::Display;
+
 pub struct KidsGift {
     pub name: String,
+}
+
+impl Display for KidsGift {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &self.name)
+    }
 }
 
 pub struct ElvesGift {
     pub name: String,
 }
 
+impl Display for ElvesGift {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &self.name)
+    }
+}
+
 pub struct ReindeerGift {
     pub name: String,
 }
 
-pub fn display_gift(gift: Unknown) {
+impl Display for ReindeerGift {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &self.name)
+    }
+}
+
+pub fn display_gift(gift: impl Display) {
     println!("{}", gift);
 }
 
