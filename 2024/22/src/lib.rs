@@ -1,12 +1,14 @@
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
+use std::str::from_utf8;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct TempFile {
     file_path: PathBuf,
     file: File,
     // 1. Add a new field named `content` with a valid type
+    content: String,
 }
 
 impl TempFile {
@@ -24,20 +26,23 @@ impl TempFile {
         let file = OpenOptions::new()
             .read(true)
             .write(true)
+            .truncate(true)
             .create(true)
             .open(&file_path)?;
 
-        Ok(Self { file_path, file })
+        Ok(Self { file_path, file, content: String::new() })
     }
 
     // 2. Change this method to update the `content` field on every write
     pub fn write(&mut self, data: &[u8]) -> Result<(), std::io::Error> {
         self.file.write_all(data)?;
+        self.content = from_utf8(data).unwrap_or_default().to_string();
         Ok(())
     }
 
     pub fn read_from_cache(&self) -> &str {
         // 3. Update this method to return the content as a string slice
+        &self.content
     }
 
     pub fn read_to_string(&mut self) -> Result<String, std::io::Error> {
