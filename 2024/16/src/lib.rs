@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{error::Error, fmt};
 
 // For a better understanding of the problem, have a look at the end of the file and see the `main`
 // function to see how the structs are being used.
@@ -21,13 +21,32 @@ pub struct Elf {
 pub trait Giftable {
     // 1. Define the trait definition
     // Add a function named `receive_gift`
+    fn receive_gift(&mut self);
 }
 
 // 2. Implement `Giftable` for `Kid`, `Reindeer`, and `Elf`
+impl Giftable for Kid {
+    fn receive_gift(&mut self) {
+        self.gifted = true;
+    }
+}
+
+impl Giftable for Reindeer {
+    fn receive_gift(&mut self) {
+        self.gifted = true;
+    }
+}
+
+impl Giftable for Elf {
+    fn receive_gift(&mut self) {
+        self.gifted = true;
+    }
+}
 
 pub trait Gift {
     fn wrap(&mut self);
     // 3. Define a function named `is_wrapped` that returns a boolean
+    fn is_wrapped(&self) -> bool;
 }
 
 // 4. Update the `Gift` trait implementation for `KidsGift`, `ElvesGift`, and `ReindeerGift` to
@@ -39,6 +58,9 @@ impl Gift for KidsGift {
     }
 
     // Update implementation
+    fn is_wrapped(&self) -> bool {
+        self.is_wrapped
+    }
 }
 
 impl Gift for ElvesGift {
@@ -47,6 +69,9 @@ impl Gift for ElvesGift {
     }
 
     // Update implementation
+    fn is_wrapped(&self) -> bool {
+        self.is_wrapped
+    }
 }
 
 impl Gift for ReindeerGift {
@@ -55,13 +80,22 @@ impl Gift for ReindeerGift {
     }
 
     // Update implementation
+    fn is_wrapped(&self) -> bool {
+        self.is_wrapped
+    }
 }
 
 pub struct Santa;
 
 impl Santa {
-    pub fn give_gift(&self, recipient: Unknown, gift: Unknown) -> Result<(), Box<dyn Error>> {
+    pub fn give_gift(&self, recipient: &mut impl Giftable, gift: &impl Gift) -> Result<(), Box<dyn Error>> {
         // 5. Update the function signature to accept any type of recipient and gift
+        if !gift.is_wrapped() {
+            return Err("Gift not wrapped".into())
+        }
+
+        recipient.receive_gift();
+        Ok(())
     }
 }
 
@@ -141,24 +175,34 @@ pub fn main() {
     prepare_gift(&mut elves_gift);
     prepare_gift(&mut reindeer_gift);
 
-    if let Ok(_) = santa.give_gift(&mut alice, &kids_gift) {
+    if santa.give_gift(&mut alice, &kids_gift).is_ok() {
         println!("{} received {}", alice.name, kids_gift);
-        assert_eq!(alice.gifted, true);
+        assert!(alice.gifted);
     } else {
         panic!("{} should have received {}", alice.name, kids_gift);
     }
 
-    if let Ok(_) = santa.give_gift(&mut prancer, &reindeer_gift) {
+    if santa.give_gift(&mut prancer, &reindeer_gift).is_ok() {
         println!("{} received {}", prancer.name, reindeer_gift);
-        assert_eq!(prancer.gifted, true);
+        assert!(prancer.gifted);
     } else {
         panic!("{} should have received {}", prancer.name, reindeer_gift);
     }
 
-    if let Ok(_) = santa.give_gift(&mut bernard, &elves_gift) {
+    if santa.give_gift(&mut bernard, &elves_gift).is_ok() {
         println!("{} received {}", bernard.name, elves_gift);
-        assert_eq!(bernard.gifted, true);
+        assert!(bernard.gifted);
     } else {
         panic!("{} should have received {}", bernard.name, elves_gift);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::main;
+
+    #[test]
+    fn test_main() {
+        main();
     }
 }
