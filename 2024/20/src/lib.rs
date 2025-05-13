@@ -5,11 +5,38 @@ pub struct Ready;
 pub struct Flying;
 
 // TODO: Define the `status` method for all states
+pub trait SleighStatus {
+    fn status() -> &'static str;
+}
 
-pub struct Sleigh<T> {
+impl SleighStatus for Empty {
+    fn status() -> &'static str {
+        "Empty"
+    }
+}
+
+impl SleighStatus for Ready {
+    fn status() -> &'static str {
+        "Ready"
+    }
+}
+
+impl SleighStatus for Flying {
+    fn status() -> &'static str {
+        "Flying"
+    }
+}
+
+pub struct Sleigh<T: SleighStatus> {
     // This is only public for testing purposes
     // In real-world scenarios, this should be private
     pub state: PhantomData<T>,
+}
+
+impl<T: SleighStatus> Sleigh<T> {
+    pub fn status(&self) -> &'static str {
+        T::status()
+    }
 }
 
 impl Sleigh<Empty> {
@@ -19,6 +46,12 @@ impl Sleigh<Empty> {
 
     pub fn load(self) -> Sleigh<Ready> {
         Sleigh { state: PhantomData }
+    }
+}
+
+impl Default for Sleigh<Empty> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
